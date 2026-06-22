@@ -56,12 +56,13 @@ window.addEventListener('DOMContentLoaded', () => {
     function createTextBox(left, top, width, height, defaultText, alignX, alignY, isTitle = false) {
         const centerX = Math.floor(left + width / 2);
         const centerY = Math.floor(top + height / 2);
+        const boxFillColor = isTitle ? 'transparent' : 'rgba(102, 102, 102, 0.3)';
 
         const bgRect = new fabric.Rect({
             left: centerX, top: centerY, width: width, height: height,
             rx: 12, ry: 12, 
             selectable: false,
-            const boxFillColor = isTitle ? 'transparent' : 'rgba(102, 102, 102, 0.1)';
+            fill: boxFillColor, ...lockOptions, name: 'text-box-bg'
         });
         
         const currentTextOptions = {
