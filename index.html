@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>페어페이</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script src="https://unpkg.com/vanilla-picker@2"></script>
+    
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hachi+Maru+Pop&display=swap" rel="stylesheet">
+    
+    <style>
+        @font-face {
+        font-family: 'Paperozi';
+        src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2');
+        font-weight: 500;
+        font-display: swap;
+        }
+
+        @font-face {
+        font-family: 'Sweet';
+        src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-2@1.0/SUITE-Regular.woff2') format('woff2');
+        font-weight: 500;
+        font-display: swap;
+        }
+        
+        @font-face {
+        font-family: 'Sweet';
+        src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-2@1.0/SUITE-Regular.woff2') format('woff2');
+        font-weight: 700;
+        font-display: swap;
+        }
+
+        body { background-color: #f0f0f0; display: flex; flex-direction: column; align-items: center; padding: 20px; font-family: 'Sweet', sans-serif; margin: 0; }
+        canvas { border: 1px solid #ccc; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        #pickerContainer { position: absolute; z-index: 9999; display: none; }
+
+        /* 상단 타이틀 스타일 */
+        .title { background: #ffffff; padding: 10px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 600px; text-align: center; box-sizing: border-box; }
+
+        /* 하단 메인 제어판 스타일 */
+        .control-panel { background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15 rgba(0,0,0,0.05); width: 1000px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; box-sizing: border-box; margin-bottom: 20px; }
+        .menu-section { border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; }
+        .menu-section h3 { margin-top: 0; margin-bottom: 15px; color: #334155; font-size: 16px; border-bottom: 2px solid #cbd5e1; padding-bottom: 5px; }
+        .control-group { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
+        .control-group input[type="color"] { width: 50px; height: 30px; border: none; cursor: pointer; }
+        .control-group input[type="range"] { width: 100px; }
+
+        /* 하단 스탯 전용 제어판 스타일 */
+        .stat-panel-container { background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 800px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; box-sizing: border-box; }
+        .stat-column h3 { margin-top: 0; margin-bottom: 15px; color: #475569; font-size: 16px; border-bottom: 2px solid #94a3b8; padding-bottom: 5px; }
+        .stat-slider-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 14px; background: #f8fafc; padding: 6px 12px; border-radius: 6px; border: 1px solid #f1f5f9; }
+        .stat-slider-row span { font-weight: bold; color: #64748b; }
+        .stat-slider-row input[type="range"] { width: 150px; }
+
+        /* 메뉴판 요소들도 구글 웹폰트 적용 */
+        input, span, label, h3 { font-family: 'Sweet', sans-serif !important; }
+
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px; 
+            background-clip: padding-box;
+            border: 2px solid transparent; 
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.4); 
+            border-radius: 10px;
+            background-clip: padding-box;
+            border: 2px solid transparent;
+        }
+
+        ::-webkit-scrollbar-button {
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div style="position: absolute; opacity: 0; width: 0; height: 0; overflow: hidden; pointer-events: none;">
+        <span style="font-family: 'Sweet'; font-weight: 500;">load</span>
+        <span style="font-family: 'Hachi Maru Pop';">load</span>
+        <span style="font-family: 'Paperozi';">load</span>
+    </div>
+
+    <div class="title" style="margin-top:10px; margin-bottom:30px;">
+        <div class="menu-section" style="grid-column: span 3; text-align: center;">
+            <h2 style="margin: 0; color: #1e293b; font-size: 24px; font-weight: bold;">페어페이</h2>
+            <p style="margin: 5px 0 0; color: #475569; font-size: 14px; padding-bottom:10px;">간단하게 만드는 페어틀</p>
+            <p style="margin: 5px 0 0; color: #333333; font-size: 14px;">✨컬러칩은 직접 클릭하여 색상을 바꾸실 수 있어요.</p>
+            <p style="margin: 5px 0 0; color: #333333; font-size: 14px;">✨커미션 표기가 필요 없는 이미지는 ⓒ commission 글자를 클릭해서 지워버리시면 됩니다.</p>
+        </div>
+    </div>
+
+
+    <canvas id="pairCanvas" width="1600" height="900"></canvas>
+    
+    <input type="file" id="imageUploader" accept="image/*" style="display: none;">
+    
+    <div id="pickerContainer"></div>
+
+    <div class="control-panel" style="margin-top:50px;">
+        <div class="menu-section">
+            <h3>🎨 기본 색상</h3>
+            <div class="control-group">
+                <label>전체 배경</label>
+                <input type="color" id="bgControl" value="#D2D2D2">
+            </div>
+            <div class="control-group">
+                <label>전체 폰트</label>
+                <input type="color" id="fontColorControl" value="#333333">
+            </div>
+            <div class="control-group" style="display:none;">
+                <label>상단 헤더 (미사용)</label>
+                <input type="color" id="headerControl" value="#969696">
+            </div>
+        </div>
+
+        <div class="menu-section">
+            <h3>🔖 해시태그</h3>
+                <div class="control-group">
+                    <label>좌 해시태그</label>
+                    <input type="color" id="leftTagColorControl" value="#EEEEEE">
+                </div>
+                <div class="control-group">
+                    <label>우 해시태그</label>
+                    <input type="color" id="rightTagColorControl" value="#EEEEEE">
+                </div>
+        </div>
+
+        <div class="menu-section">
+            <h3>🏹 관계 화살표</h3>
+            <div class="control-group">
+                <label>위 화살표 색상</label>
+                <input type="color" id="arrowTopColor" value="#999999">
+            </div>
+            <div class="control-group" style="margin-top: 8px;">
+                <label>아래 화살표 색상</label>
+                <input type="color" id="arrowBottomColor" value="#999999">
+            </div>
+        </div>
+
+        <div class="menu-section">
+            <h3>🖼️ 이미지</h3>
+            <div class="control-group">
+                <label>테두리 색상</label>
+                <input type="color" id="imgStrokeColor" value="#333333">
+            </div>
+            <div class="control-group">
+                <label>테두리 두께</label>
+                <input type="range" id="imgStrokeWidth" min="0" max="15" value="0">
+            </div>
+        </div>
+
+        <div class="menu-section">
+            <h3>🌈 컬러칩</h3>
+            <div class="control-group">
+                <label>테두리 색상</label>
+                <input type="color" id="chipStrokeColor" value="#000000">
+            </div>
+            <div class="control-group">
+                <label>테두리 두께</label>
+                <input type="range" id="chipStrokeWidth" min="0" max="15" value="0">
+            </div>
+        </div>
+
+        <div class="menu-section">
+            <h3>📝 텍스트 & 스테이터스</h3>
+            <div class="control-group">
+                <label>테두리 색상</label>
+                <input type="color" id="textStrokeColor" value="#000000">
+            </div>
+            <div class="control-group">
+                <label>테두리 두께</label>
+                <input type="range" id="textStrokeWidth" min="0" max="15" value="0">
+            </div>
+        </div>
+
+
+    </div>
+
+    <div class="stat-panel-container">
+        <div class="stat-column">
+            <h3>📊 좌측 캐릭터 스테이터스 (각 0~5)</h3>
+            <div id="leftStatSliders"></div>
+        </div>
+        <div class="stat-column">
+            <h3>📊 우측 캐릭터 스테이터스 (각 0~5)</h3>
+            <div id="rightStatSliders"></div>
+        </div>
+    </div>
+
+<div class="menu-section" style="margin-top: 20px; text-align: center;">
+    <button id="saveCanvasBtn" style="
+        width: 100%; 
+        padding: 12px; 
+        background: #475569; 
+        color: white; 
+        border: none; 
+        border-radius: 8px; 
+        font-size: 16px; 
+        font-weight: bold; 
+        cursor: pointer;
+        transition: background 0.2s;
+    " onmouseover="this.style.background='#334155'" onmouseout="this.style.background='#475569'">
+        💾 다운로드
+    </button>
+</div>
+
+</div>
+    <script src="script.js"></script>
+</body>
+</html>
