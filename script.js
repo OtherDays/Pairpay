@@ -106,7 +106,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     // [전체 텍스트 박스 레이아웃 배치]
-    createTextBox(20, 25, 430, 60, '이름 (줄바꿈 1회까지 가능)', 'left', 'center', true);      
+    createTextBox(20, 25, 430, 60, '이름', 'left', 'center', true);      
     createTextBox(1150, 25, 430, 60, '일본어 폰트를 지원합니다!', 'right', 'center', true);   
     
     createTextBox(310, 170, 220, 160, '성별, 연령, 소속 등', 'left', 'top');  
