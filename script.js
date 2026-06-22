@@ -61,7 +61,7 @@ window.addEventListener('DOMContentLoaded', () => {
             left: centerX, top: centerY, width: width, height: height,
             rx: 12, ry: 12, 
             selectable: false,
-            fill: 'rgba(102, 102, 102, 0.1)', ...lockOptions, name: 'text-box-bg' // #666666 알파 30%
+            const boxFillColor = isTitle ? 'transparent' : 'rgba(102, 102, 102, 0.1)';
         });
         
         const currentTextOptions = {
