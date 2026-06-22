@@ -109,7 +109,7 @@ window.addEventListener('DOMContentLoaded', () => {
     createTextBox(20, 25, 430, 60, '이름 (줄바꿈 1회까지 가능)', 'left', 'center', true);      
     createTextBox(1150, 25, 430, 60, '일본어 폰트를 지원합니다!', 'right', 'center', true);   
     
-    createTextBox(310, 170, 220, 160, '이름, 성별, 연령, 소속 등', 'left', 'top');  
+    createTextBox(310, 170, 220, 160, '성별, 연령, 소속 등', 'left', 'top');  
     createTextBox(1070, 170, 220, 160, '기본적인 정보 공간.', 'right', 'top'); 
     
     createTextBox(310, 350, 220, 180, '외관 정보가 들어가면', 'left', 'top'); 
