@@ -358,7 +358,7 @@ window.addEventListener('DOMContentLoaded', () => {
         reader.onload = function(f) {
             fabric.Image.fromURL(f.target.result, function(img) {
                 img.scaleToWidth(selectedSlot.width);
-                img.set({ left: selectedSlot.left, top: selectedSlot.top, originX: 'center', originY: 'center', hasRotatingPoint: true });
+                img.set({ left: selectedSlot.left, top: selectedSlot.top, originX: 'center', originY: 'center', hasRotatingPoint: true, name: 'user-uploaded-image', originalSlotName: selectedSlot.customId || selectedSlot.name });
                 const clipMask = new fabric.Rect({ left: selectedSlot.left, top: selectedSlot.top, width: selectedSlot.width, height: selectedSlot.height, rx: selectedSlot.rx, ry: selectedSlot.ry, originX: 'center', originY: 'center', absolutePositioned: true });
                 img.clipPath = clipMask; canvas.add(img);
 
@@ -368,6 +368,42 @@ window.addEventListener('DOMContentLoaded', () => {
             });
         };
         reader.readAsDataURL(file); e.target.value = '';
+    });
+
+    // ==========================================
+    // 7-B 잘못 불러온 이미지 삭제 및 슬롯 리셋 기능 (Del/Backspace 키)
+    // ==========================================
+    window.addEventListener('keydown', function(e) {
+        // 유저가 글자를 타이핑하는 중(Textbox 수정 중)일 때는 작동하지 않도록
+        const activeObject = canvas.getActiveObject();
+        if (!activeObject) return;
+        if (activeObject.isEditing) return; 
+
+        // 키보드의 Delete 키나 Backspace 키가 눌렸을 때
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            // [A] 선택된 객체가 유저가 새로 업로드한 '이미지 객체'일 시
+            if (activeObject.name === 'user-uploaded-image') {
+                // 이 이미지와 연결되어 있던 원래 회색 가이드 슬롯의 이름을 확인
+                const originalSlotName = activeObject.originalSlotName;
+                
+                // 캔버스에서 유저 이미지 삭제
+                canvas.remove(activeObject);
+                
+                // 가이드 박스 복구
+                const originalSlot = canvas.getObjects().find(obj => obj.customId === originalSlotName);
+                if (originalSlot) {
+                    originalSlot.set({
+                        opacity: 1,
+                        selectable: true,
+                        hoverCursor: 'pointer'
+                    });
+                }
+                
+                canvas.discardActiveObject(); // 선택 해제
+                canvas.renderAll();           // 캔버스 새로고침
+                e.preventDefault();           // 브라우저 뒤로가기 등 기본 동작 방지
+            }
+        }
     });
 
 
