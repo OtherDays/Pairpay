@@ -150,7 +150,8 @@ window.addEventListener('DOMContentLoaded', () => {
             if (side === 'left') {
                 const statNameText = new fabric.Textbox(`스테이터스 ${i+1}`, {
                     left: startBoxX + 15, top: currentY, width: 85,
-                    ...textOptions, textAlign: 'left', fontSize: 14, originX: 'left', originY: 'top'
+                    ...textOptions, textAlign: 'left', fontSize: 14, originX: 'left', originY: 'top',
+                    name: 'normal-textbox'
                 });
                 canvas.add(statNameText);
 
@@ -167,7 +168,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
                 const statNameText = new fabric.Textbox(`스테이터스 ${i+1}`, {
                     left: startBoxX + 220 - 15, top: currentY, width: 85,
-                    ...textOptions, textAlign: 'right', fontSize: 14, originX: 'right', originY: 'top'
+                    ...textOptions, textAlign: 'right', fontSize: 14, originX: 'right', originY: 'top',
+                    name: 'normal-textbox'
                 });
                 canvas.add(statNameText);
             }
@@ -290,52 +292,50 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
     // ==========================================
-    // 6. 컬러 칩 클릭 시 컬러 피커 작동 로직
+    // 6. 컬러 피커 마우스 위치 추적 로직
     // ==========================================
-    const pickerContainer = document.getElementById('pickerContainer');
-    
-    // Vanilla-Picker 초기화
-    const picker = new Picker({
-        parent: pickerContainer, 
-        popup: false, 
-        alpha: false,
-        onChange: function(color) {
-            const activeObject = canvas.getActiveObject();
-            if (activeObject && activeObject.name === 'point-yellow') {
-                activeObject.set('fill', color.hex.substring(0, 7)); 
+    const hiddenPicker = document.getElementById('hiddenColorPicker');
+  
+    let targetClickedChip = null;
+
+    if (hiddenPicker) {
+        hiddenPicker.addEventListener('input', function(e) {
+            if (targetClickedChip) {
+                targetClickedChip.set('fill', e.target.value);
                 canvas.renderAll();
+            } else {
+                const activeObject = canvas.getActiveObject();
+                if (activeObject && activeObject.name === 'point-yellow') {
+                    activeObject.set('fill', e.target.value);
+                    canvas.renderAll();
+                }
             }
-        },
-        // 피커 하단의 OK(Done) 버튼을 누르면 호출되는 함수
-        onDone: function(color) {
-            pickerContainer.style.display = 'none'; // 피커 창 숨김
-            canvas.discardActiveObject(); // 선택된 컬러칩의 테두리 해제
+        });
+        
+        hiddenPicker.addEventListener('change', function() {
+            targetClickedChip = null; // 타겟 초기화
+            canvas.discardActiveObject();
             canvas.renderAll();
-        }
-    });
+        });
+    }
 
     // 캔버스 마우스 클릭 리스너
     canvas.on('mouse:down', function(options) {
         const activeObject = canvas.getActiveObject();
         
-        // 컬러칩('point-yellow')을 누른 경우에만 피커를 띄웁니다.
+        // 정확히 컬러칩을 눌렀을 때만 작동
         if (activeObject && activeObject.name === 'point-yellow') {
             const e = options.e;
+
+            targetClickedChip = activeObject;
             
-            pickerContainer.style.left = (e.clientX + 10) + 'px'; 
-            pickerContainer.style.top = (e.clientY + 10) + 'px';
-            pickerContainer.style.display = 'block'; 
-            
-            picker.setColor(activeObject.fill, true);
-        } else { 
-            // 피커 내부 조작 시에는 유지하고, 다른 주요 슬롯을 새로 클릭했을 때만 닫습니다.
-            if (options.target && (
-                options.target.name === 'image-slot' || 
-                options.target.name === 'header-image-slot' || 
-                options.target.name === 'arrow-top' || 
-                options.target.name === 'arrow-bottom'
-            )) {
-                pickerContainer.style.display = 'none'; 
+            if (hiddenPicker) {
+                // 마우스 클릭 위치에서 우하단(오른쪽 20px, 아래쪽 20px)에 피커 위치시키기
+                hiddenPicker.style.left = (e.clientX + 20) + 'px'; 
+                hiddenPicker.style.top = (e.clientY + 20) + 'px';
+                
+                // 강제 클릭해서 팝업 열기
+                hiddenPicker.click(); 
             }
         }
     });
@@ -374,12 +374,39 @@ window.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     // 8. 하단 메뉴판 제어 기능 연동
     // ==========================================
-    document.getElementById('bgControl').addEventListener('input', function(e) {
-        const bgRect = canvas.getObjects().find(obj => obj.name === 'canvas-bg-rect');
-        if (bgRect) { bgRect.set('fill', e.target.value); canvas.renderAll(); }
-    });
+    
+    // 시작색과 끝색 피커 요소를 가져옵니다.
+    const bgStartPicker = document.getElementById('bgControl');
+    const bgEndPicker = document.getElementById('bgGradientControl');
 
-    document.getElementById('headerControl').addEventListener('input', function(e) {});
+    // 두 피커의 값을 동시에 읽어서 배경판을 그라데이션으로 실시간 업데이트하는 함수
+    function updateCanvasGradient() {
+        const bgRect = canvas.getObjects().find(obj => obj.name === 'canvas-bg-rect');
+        if (bgRect && bgStartPicker && bgEndPicker) {
+            const dynamicGradient = new fabric.Gradient({
+                type: 'linear',
+                gradientUnits: 'pixels',
+                coords: { x1: 0, y1: 0, x2: 1600, y2: 900 }, // 왼쪽 위 -> 오른쪽 아래
+                colorStops: [
+                    { offset: 0, color: bgStartPicker.value }, // 유저가 선택한 시작색 (좌상)
+                    { offset: 1, color: bgEndPicker.value }   // 유저가 선택한 끝색 (우하)
+                ]
+            });
+            
+            bgRect.set('fill', dynamicGradient);
+            canvas.renderAll();
+        }
+    }
+
+    // 배경 시작색 피커를 움직일 때 실시간 반영
+    if (bgStartPicker) {
+        bgStartPicker.addEventListener('input', updateCanvasGradient);
+    }
+
+    // 배경 끝색 피커를 움직일 때 실시간 반영
+    if (bgEndPicker) {
+        bgEndPicker.addEventListener('input', updateCanvasGradient);
+    }
 
     function updateGroupOutline(targetName, colorValue, widthValue) {
         const thickness = Number(widthValue);
@@ -455,31 +482,21 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // [A] 전체 폰트 색상 제어 리스너 
     document.getElementById('fontColorControl').addEventListener('input', function(e) {
         const newColor = e.target.value;
-        const creditColor = hexToRgba60(newColor); // 선택된 색상의 60% 농도 계산
 
         canvas.getObjects().forEach(obj => {
-            // [A] 일반 텍스트 박스들 색상 변경
             if (obj.name === 'title-textbox' || obj.name === 'normal-textbox') {
-                obj.set('fill', newColor);
-                if (obj.styles) {
+                obj.set('fill', newColor); 
+                
+                if (obj.styles && Object.keys(obj.styles).length > 0) {
                     Object.keys(obj.styles).forEach(lineKey => {
-                        Object.keys(obj.styles[lineKey]).forEach(charKey => {
-                            obj.styles[lineKey][charKey].fill = newColor;
-                        });
-                    });
-                }
-            }
-            
-            // [B] 출처 표기 텍스트 박스 색상 동기화 (60% 농도)
-            if (obj.name === 'credit-textbox') {
-                obj.set('fill', creditColor);
-                if (obj.styles) {
-                    Object.keys(obj.styles).forEach(lineKey => {
-                        Object.keys(obj.styles[lineKey]).forEach(charKey => {
-                            obj.styles[lineKey][charKey].fill = creditColor;
-                        });
+                        if (obj.styles[lineKey]) {
+                            Object.keys(obj.styles[lineKey]).forEach(charKey => {
+                                obj.styles[lineKey][charKey].fill = newColor;
+                            });
+                        }
                     });
                 }
             }
@@ -496,6 +513,72 @@ window.addEventListener('DOMContentLoaded', () => {
         }
         canvas.renderAll();
     });
+
+    // [B] 출처 폰트색 독자 제어 리스너 
+    const creditColorPicker = document.getElementById('creditColorControl');
+    if (creditColorPicker) {
+        creditColorPicker.addEventListener('input', function(e) {
+            // hexToRgba60 함수는 이 리스너보다 윗줄에 선언되어 있어야 안전
+            const creditColor = hexToRgba60(e.target.value); 
+
+            canvas.getObjects().forEach(obj => {
+                if (obj.name === 'credit-textbox') {
+                    obj.set('fill', creditColor);
+                    
+                    if (obj.styles && Object.keys(obj.styles).length > 0) {
+                        Object.keys(obj.styles).forEach(lineKey => {
+                            if (obj.styles[lineKey]) {
+                                Object.keys(obj.styles[lineKey]).forEach(charKey => {
+                                    obj.styles[lineKey][charKey].fill = creditColor;
+                                });
+                            }
+                        });
+                    }
+                }
+            });
+            canvas.renderAll();
+        });
+    }
+
+    const textBgColorPicker = document.getElementById('textBgColorControl');
+    const textBgAlphaSlider = document.getElementById('textBgAlphaControl');
+
+    // 색상(Hex)과 투명도(0~100)를 조합해 텍스트박스 배경 조정
+    function updateTextBackgroundStyle() {
+        if (!textBgColorPicker || !textBgAlphaSlider) return;
+
+        const hexColor = textBgColorPicker.value;
+        const alphaValue = Number(textBgAlphaSlider.value) / 100;
+
+        // 유저가 픽한 Hex 색상을 RGB 숫자로 쪼개기
+        let c = hexColor.substring(1);
+        if (c.length === 3) c = c[0] + c[0] + c[1] + c[1] + c[2] + c[2];
+        const r = parseInt(c.substring(0, 2), 16);
+        const g = parseInt(c.substring(2, 4), 16);
+        const b = parseInt(c.substring(4, 6), 16);
+
+        // 완성된 실시간 RGBA 값
+        const finalRgba = `rgba(${r}, ${g}, ${b}, ${alphaValue})`;
+
+        canvas.getObjects().forEach(obj => {
+            if (obj.name === 'text-box-bg' || obj.name === 'special-mint') {
+                if (obj.fill !== 'transparent') {
+                    obj.set('fill', finalRgba);
+                }
+            }
+        });
+        canvas.renderAll();
+    }
+
+    // 배경색 피커 조작 시 실시간 반영
+    if (textBgColorPicker) {
+        textBgColorPicker.addEventListener('input', updateTextBackgroundStyle);
+    }
+
+    // 투명도 슬라이더 조작 시 실시간 반영
+    if (textBgAlphaSlider) {
+        textBgAlphaSlider.addEventListener('input', updateTextBackgroundStyle);
+    }
     
     function refreshAllTextFonts() {
         canvas.getObjects().forEach(obj => {
