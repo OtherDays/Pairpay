@@ -45,16 +45,17 @@
         .menu-section h3 { margin-top: 0; margin-bottom: 15px; color: #334155; font-size: 16px; border-bottom: 2px solid #cbd5e1; padding-bottom: 5px; }
         .control-group { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
         .control-group input[type="color"] { width: 50px; height: 30px; border: none; cursor: pointer; }
-        .control-group input[type="range"] { width: 100px; }
+        .control-group input[type="range"] { width: 60px; }
+        .control-group label { width: 70px; margin-right: 10px; text-align: left; color: #475569; }
 
-        /* 하단 스탯 전용 제어판 스타일 */
+        /* 하단 스테이터스 제어판 스타일 */
         .stat-panel-container { background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 800px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; box-sizing: border-box; }
         .stat-column h3 { margin-top: 0; margin-bottom: 15px; color: #475569; font-size: 16px; border-bottom: 2px solid #94a3b8; padding-bottom: 5px; }
         .stat-slider-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 14px; background: #f8fafc; padding: 6px 12px; border-radius: 6px; border: 1px solid #f1f5f9; }
         .stat-slider-row span { font-weight: bold; color: #64748b; }
         .stat-slider-row input[type="range"] { width: 150px; }
 
-        /* 메뉴판 요소들도 구글 웹폰트 적용 */
+        /* 메뉴판 요소 구글 웹폰트 적용 */
         input, span, label, h3 { font-family: 'Sweet', sans-serif !important; }
 
 
@@ -102,7 +103,7 @@
             <p style="margin: 5px 0 0; color: #333333; font-size: 14px;">✨빈 이미지 박스를 클릭하면 파일을 선택한 뒤 이동, 크기 조절, 회전이 가능해요.</p>
             <p style="margin: 5px 0 0; color: #333333; font-size: 14px;">✨이미지 박스의 배경은 이미지가 업로드되면 투명하게 바뀌어요.</p>
             <p style="margin: 5px 0 0; color: #333333; font-size: 14px;">✨커미션 표기가 필요 없는 이미지는 ⓒ commission 글자를 클릭해서 지워버리시면 끝.</p>
-            <p style="margin: 5px 0 0; color: #333333; font-size: 14px;">✨컬러칩(쪼로로 네모 넷)은 직접 클릭하여 색상을 바꾸실 수 있어요.</p>
+            <p style="margin: 5px 0 0; color: #333333; font-size: 14px;">✨컬러칩(쪼로로 네모 넷)은 더블클릭하여 직접 색상을 바꾸실 수 있어요.</p>
             <p style="margin: 5px 0 0; color: #333333; font-size: 14px;">✨스테이터스 이름도 전부 수정하실 수 있어요.</p>
             <p style="margin: 5px 0 0; color: #333333; font-size: 14px;">✨PC 사용을 권장합니다. 모바일 지원 예정이 없어요.</p>
             <p style="margin: 5px 0 0; color: #333333; font-size: 14px;">💥자작 발언, 상업적 이용, 수정 후 재배포 등은 금지하고 있습니다.</p>
@@ -114,18 +115,24 @@
     
     <input type="file" id="imageUploader" accept="image/*" style="display: none;">
     
-    <div id="pickerContainer"></div>
+    <input type="color" id="hiddenColorPicker" style="position: absolute; display: block; opacity: 0; width: 1px; height: 1px; pointer-events: none; z-index: 9999;">
 
     <div class="control-panel" style="margin-top:50px;">
         <div class="menu-section">
             <h3>🎨 기본 색상</h3>
             <div class="control-group">
-                <label>전체 배경</label>
-                <input type="color" id="bgControl" value="#D2D2D2">
+                <label for="bgControl">배경 시작</label>
+                <input type="color" id="bgControl" value="#EFEFEF">
+
+                <label for="bgGradientControl" style="margin-left: 10px;">배경 끝</label>
+                <input type="color" id="bgGradientControl" value="#D2D2D2">
             </div>
             <div class="control-group">
                 <label>전체 폰트</label>
                 <input type="color" id="fontColorControl" value="#333333">
+
+                <label for="creditColorControl" style="margin-left: 10px;">출처</label>
+                <input type="color" id="creditColorControl" value="#333333">
             </div>
             <div class="control-group" style="display:none;">
                 <label>상단 헤더 (미사용)</label>
@@ -136,11 +143,11 @@
         <div class="menu-section">
             <h3>🔖 해시태그</h3>
                 <div class="control-group">
-                    <label>좌 해시태그</label>
+                    <label>좌 배경</label>
                     <input type="color" id="leftTagColorControl" value="#EEEEEE">
                 </div>
                 <div class="control-group">
-                    <label>우 해시태그</label>
+                    <label>우 배경</label>
                     <input type="color" id="rightTagColorControl" value="#EEEEEE">
                 </div>
         </div>
@@ -148,11 +155,11 @@
         <div class="menu-section">
             <h3>🏹 관계 화살표</h3>
             <div class="control-group">
-                <label>위 화살표 색상</label>
+                <label>위 색상</label>
                 <input type="color" id="arrowTopColor" value="#999999">
             </div>
             <div class="control-group" style="margin-top: 8px;">
-                <label>아래 화살표 색상</label>
+                <label>아래 색상</label>
                 <input type="color" id="arrowBottomColor" value="#999999">
             </div>
         </div>
@@ -186,10 +193,16 @@
             <div class="control-group">
                 <label>테두리 색상</label>
                 <input type="color" id="textStrokeColor" value="#000000">
+                <label style="margin-left: 10px;">테두리 두께</label>
+                <input type="range" id="textStrokeWidth" min="0" max="15" value="0">      
+             
             </div>
             <div class="control-group">
-                <label>테두리 두께</label>
-                <input type="range" id="textStrokeWidth" min="0" max="15" value="0">
+                <label for="textBgColorControl">배경 색상 </label>
+                <input type="color" id="textBgColorControl" value="#666666">     
+
+                <label for="textBgAlphaControl" style="margin-left: 10px;">배경 투명도:</label>
+                <input type="range" id="textBgAlphaControl" min="0" max="100" value="30">
             </div>
         </div>
 
