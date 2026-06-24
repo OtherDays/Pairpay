@@ -406,7 +406,6 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-
     // ==========================================
     // 8. 하단 메뉴판 제어 기능 연동
     // ==========================================
@@ -781,4 +780,22 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ==========================================
+    // 캔버스 내부 최하단 제작자 크레딧 
+    // ==========================================
+    const canvasCreditText = new fabric.Textbox('Template : @OtherDaysCode', {
+        ...lockOptions,
+        fontFamily: 'sweet',
+        fontSize: 10,
+        fill: 'rgba(65, 65, 65, 0.6)',          
+        textAlign: 'center',
+        originX: 'center',
+        originY: 'bottom',
+        left: 800,               
+        top: 899,                 
+        width: 300,
+        selectable: false,
+        hoverCursor: 'default'
+    });
+    canvas.add(canvasCreditText);
 });
